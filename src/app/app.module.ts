@@ -7,14 +7,25 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app.router';
 import { effects, store, instrumentation } from './store';
 import { SharedModule } from './shared/shared.module';
-import { TabMenuModule } from 'primeng/primeng';
 import { ClubscheduleModule } from './clubschedule/clubschedule.module'
 import { WeatherService } from './weather/weather.service';
-import { EventService } from './service/eventservice';
+
+import { AlertComponent } from './alert/alert.component';
+import { AuthGuard } from './service/auth.guard';
+import { AlertService } from './service/alert.service';
+import { AuthenticationService } from './service/authentication.service';
+import { UserService } from './service/user.service';
+import { LoginComponent } from './login/login.component';
+import { RegisterComponent } from './register/register.component';
+
+import { EventService } from './service/event.service';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    AlertComponent,
+    LoginComponent,
+    RegisterComponent
   ],
   imports: [
     BrowserModule,
@@ -25,11 +36,15 @@ import { EventService } from './service/eventservice';
     effects,
     AppRoutingModule,
     instrumentation,
-    ClubscheduleModule,
-    TabMenuModule
+    ClubscheduleModule
   ],
   providers: [
-    WeatherService, EventService
+    WeatherService, 
+    EventService, 
+    AuthGuard,
+    AlertService,
+    AuthenticationService,
+    UserService
   ],
   bootstrap: [
     AppComponent

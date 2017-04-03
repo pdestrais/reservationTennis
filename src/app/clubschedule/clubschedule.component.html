@@ -1,27 +1,30 @@
 <div class="content-section">
+    <h1>Occupation du terrain</h1>
     <div>
-        <span class="feature-title">Schedule</span>
+        <span class="feature-title">Occupation du terrain</span>
     </div>
 </div>
 
 <div class="content-section implementation">
-    <p-schedule [events]="events" [header]="header" defaultDate="2017-02-01" locale="fr" [eventLimit]="4" [editable]="true"
+    <p-schedule [events]="events" [header]="header" minTime="06:00:00" maxTime="22:00:00" locale="fr" [eventLimit]="4" [editable]="true"
                 (onDayClick)="handleDayClick($event)" (onEventClick)="handleEventClick($event)"></p-schedule>
     
     <p-dialog header="Event Details" [(visible)]="dialogVisible" [responsive]="true" showEffect="fade" [modal]="false" [contentStyle]="{'overflow':'visible'}"
-        [style]="{'overflow':'visible'}" [resizable]="false">
+        [style]="{'overflow':'visible'}" [resizable]="true" width="500">
         <div class="ui-grid ui-grid-responsive ui-fluid" *ngIf="event">
             <div class="ui-grid-row">
-                <div class="ui-grid-col-4"><label for="vin">Title</label></div>
-                <div class="ui-grid-col-8"><input pInputText id="title" [(ngModel)]="event.title" /></div>
+                <div class="ui-grid-col-4"><label for="name">Nom</label></div>
+                <div class="ui-grid-col-8"><label>{{event.title}}</label></div>
             </div>
             <div class="ui-grid-row">
                 <div class="ui-grid-col-4"><label for="start">Start</label></div>
-                <div class="ui-grid-col-8"><p-calendar [(ngModel)]="event.start" dateFormat="yy-mm-dd" dataType="string"></p-calendar></div>
+                <div class="ui-grid-col-4"><p-calendar [(ngModel)]="startDate" dateFormat="yy-mm-dd" dataType="string"></p-calendar></div>
+                <div class="ui-grid-col-4"><p-dropdown [options]="times" [(ngModel)]="startTime" [style]="{'width':'140px'}" (onChange)="handleTimeChanges($event)" placeholder="Heure début"></p-dropdown></div>
             </div>
             <div class="ui-grid-row">
                 <div class="ui-grid-col-4"><label for="end">End</label></div>
-                <div class="ui-grid-col-8"><p-calendar [(ngModel)]="event.end" dateFormat="yy-mm-dd" dataType="string"></p-calendar></div>
+                <div class="ui-grid-col-4"><p-calendar [(ngModel)]="endDate" dateFormat="yy-mm-dd" dataType="string" ></p-calendar></div>
+                <div class="ui-grid-col-4"><p-dropdown [options]="times" [(ngModel)]="endTime" [style]="{'width':'140px'}" placeholder="Heure fin"></p-dropdown></div>
             </div>
             <div class="ui-grid-row">
                 <div class="ui-grid-col-4"><label for="allday">All Day</label></div>
@@ -29,9 +32,11 @@
             </div>
         </div>
         <p-footer>
-            <div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix">
-                <button type="button" pButton icon="fa-close" (click)="deleteEvent()" label="Delete" [disabled]="!event?.id"></button>
-                <button type="button" pButton icon="fa-check" (click)="saveEvent()" label="Save" [disabled]="!event?.start"></button>
+            <div *ngIf="allowToModify" class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix">
+                <button type="button" pButton icon="fa-close" (click)="deleteEvent()" label="Delete" [disabled]="!event?._id"></button>
+<!--                <button type="button" pButton icon="fa-check" (click)="saveEvent()" label="Save" [disabled]="!event?.start"></button>
+-->
+                <button type="button" pButton icon="fa-check" (click)="saveEvent()" label="Save" [disabled]="!startTime&&!endTime"></button>
             </div>
         </p-footer>
     </p-dialog>

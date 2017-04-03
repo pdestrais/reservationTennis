@@ -1,76 +1,195 @@
 import { Router, Response, Request } from 'express';
 
+var https = require('https');
+
 const eventsRouter: Router = Router();
 
-eventsRouter.get('/', (request: Request, response: Response) => {
-  console.log("event Service invoked");
-  response.json({"data": [
-    	{
-            "id": 1,
-    		"title": "All Day Event",
-    		"start": "2017-02-01"
-    	},
-    	{
-            "id": 2,
-    		"title": "Long Event",
-    		"start": "2017-02-07",
-    		"end": "2017-02-10"
-    	},
-    	{
-    		"id": 3,
-    		"title": "Repeating Event",
-    		"start": "2017-02-09T16:00:00"
-    	},
-    	{
-    		"id": 4,
-    		"title": "Repeating Event",
-    		"start": "2017-02-16T16:00:00"
-    	},
-    	{
-            "id": 5,
-    		"title": "Conference",
-    		"start": "2017-02-11",
-    		"end": "2017-02-13"
-    	},
-    	{
-            "id": 6,
-    		"title": "Meeting",
-    		"start": "2017-02-12T10:30:00",
-    		"end": "2017-02-12T12:30:00"
-    	},
-    	{
-            "id": 7,
-    		"title": "Lunch",
-    		"start": "2017-02-12T12:00:00"
-    	},
-    	{
-            "id": 8,
-    		"title": "Meeting",
-    		"start": "2017-02-12T14:30:00"
-    	},
-    	{
-            "id": 9,
-    		"title": "Happy Hour",
-    		"start": "2017-02-12T17:30:00"
-    	},
-    	{
-            "id": 10,
-    		"title": "Dinner",
-    		"start": "2017-02-12T20:00:00"
-    	},
-    	{
-            "id": 11,
-    		"title": "Birthday Party",
-    		"start": "2017-02-13T07:00:00"
-    	},
-    	{
-            "id": 12,
-    		"title": "Click for Google",
-    		"url": "http://google.com/",
-    		"start": "2017-02-28"
-    	}
-    ]
-  });
+const dbHost = 'pdestrais.cloudant.com';
+
+//query events
+eventsRouter.post('/find', (request: Request, response: Response) => {
+    var reqData = JSON.stringify(request.body);
+	var options = {
+        host: dbHost,
+        path: '/resa_tennis/_find',
+        method: 'POST',
+		rejectUnauthorized: false,
+		auth: "pdestrais:id513375",
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(reqData)
+        }
+    };  
+    console.log('/events find - selector:', reqData);
+
+    var req = https.request(options, (res) => {
+        //console.log('statusCode:', res.statusCode);
+        //console.log('headers:', res.headers);
+        var body = '';
+        res.on('data', (d) => {
+            body += d;
+            process.stdout.write(d);
+        });
+        res.on('end', function() {
+                // Data reception is done, do whatever with it!
+                //console.log("before parsing - body : "+body);
+               var parsed = {};
+               try {
+                    parsed = JSON.parse(body);
+                } catch(e) {
+                    parsed = {};
+                    console.log("error parsing result");
+                }
+                response.json({
+                    doc: parsed
+                });
+        });
+    });
+
+    req.on('error', (e) => {
+        console.error("Node Server Request got error: " + e.message);
+    });
+    req.write(reqData);
+    req.end();
+});
+
+//create event
+eventsRouter.post('/', (request: Request, response: Response) => {
+    var reqData = JSON.stringify(request.body);
+	var options = {
+        host: dbHost,
+        path: '/resa_tennis',
+        method: 'POST',
+		rejectUnauthorized: false,
+		auth: "pdestrais:id513375",
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(reqData)
+        }
+    };  
+    console.log('/events create data :', reqData);
+
+    var req = https.request(options, (res) => {
+        //console.log('statusCode:', res.statusCode);
+        //console.log('headers:', res.headers);
+        var body = '';
+        res.on('data', (d) => {
+            body += d;
+            process.stdout.write(d);
+        });
+        res.on('end', function() {
+                // Data reception is done, do whatever with it!
+                //console.log("before parsing - body : "+body);
+               var parsed = {};
+               try {
+                    parsed = JSON.parse(body);
+                } catch(e) {
+                    parsed = {};
+                    console.log("error parsing result");
+                }
+                response.json({
+                    doc: parsed
+                });
+        });
+    });
+
+    req.on('error', (e) => {
+        console.error("Node Server Request got error: " + e.message);
+    });
+    req.write(reqData);
+    req.end();
+});
+
+//update event
+eventsRouter.put('/', (request: Request, response: Response) => {
+    var reqData = JSON.stringify(request.body);
+	var options = {
+        host: dbHost,
+        path: '/resa_tennis',
+        method: 'PUT',
+		rejectUnauthorized: false,
+		auth: "pdestrais:id513375",
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(reqData)
+        }
+    };  
+    console.log('/events update data :', reqData);
+
+    var req = https.request(options, (res) => {
+        //console.log('statusCode:', res.statusCode);
+        //console.log('headers:', res.headers);
+        var body = '';
+        res.on('data', (d) => {
+            body += d;
+            process.stdout.write(d);
+        });
+        res.on('end', function() {
+                // Data reception is done, do whatever with it!
+                //console.log("before parsing - body : "+body);
+               var parsed = {};
+               try {
+                    parsed = JSON.parse(body);
+                } catch(e) {
+                    parsed = {};
+                    console.log("error parsing result");
+                }
+                response.json({
+                    doc: parsed
+                });
+        });
+    });
+
+    req.on('error', (e) => {
+        console.error("Node Server Request got error: " + e.message);
+    });
+    req.write(reqData);
+    req.end();
+});
+
+//delete event
+eventsRouter.delete('/:event_id', (request: Request, response: Response) => {
+    var reqData = JSON.stringify(request.body);
+	var options = {
+        host: dbHost,
+        path: '/resa_tennis/'+request.param("event_id")+"?_rev="+request.body._rev,
+        method: 'DELETE',
+		rejectUnauthorized: false,
+		auth: "pdestrais:id513375",
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    };  
+    console.log('/events delete data :', reqData);
+
+    var req = https.request(options, (res) => {
+        //console.log('statusCode:', res.statusCode);
+        //console.log('headers:', res.headers);
+        var body = '';
+        res.on('data', (d) => {
+            body += d;
+            process.stdout.write(d);
+        });
+        res.on('end', function() {
+                // Data reception is done, do whatever with it!
+                //console.log("before parsing - body : "+body);
+               var parsed = {};
+               try {
+                    parsed = JSON.parse(body);
+                } catch(e) {
+                    parsed = {};
+                    console.log("error parsing result");
+                }
+                response.json({
+                    doc: parsed
+                });
+        });
+    });
+
+    req.on('error', (e) => {
+        console.error("Node Server Request got error: " + e.message);
+    });
+    req.end();
 });
 
 export { eventsRouter }

@@ -12,6 +12,9 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CardComponent } from './card/card.component';
 import { LoaderComponent } from './loader/loader.component';
 
+import { TabMenuModule } from 'primeng/components/tabmenu/tabmenu';
+
+
 @NgModule({
   declarations: [
     ModalComponent,
@@ -28,7 +31,8 @@ import { LoaderComponent } from './loader/loader.component';
     CommonModule,
     RouterModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    TabMenuModule
   ],
   exports: [
     ModalComponent,

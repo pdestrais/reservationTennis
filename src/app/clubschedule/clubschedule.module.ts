@@ -8,6 +8,7 @@ import {DialogModule} from 'primeng/components/dialog/dialog';
 import {InputTextModule} from 'primeng/components/inputtext/inputtext';
 import {CalendarModule} from 'primeng/components/calendar/calendar';
 import {CheckboxModule} from 'primeng/components/checkbox/checkbox';
+import {DropdownModule} from 'primeng/components/dropdown/dropdown';
 import {ButtonModule} from 'primeng/components/button/button';
 import {TabViewModule} from 'primeng/components/tabview/tabview';
 import {CodeHighlighterModule} from 'primeng/components/codehighlighter/codehighlighter';
@@ -22,6 +23,7 @@ import {CodeHighlighterModule} from 'primeng/components/codehighlighter/codehigh
         InputTextModule,
         CalendarModule,
         CheckboxModule,
+        DropdownModule,
         ButtonModule,
         TabViewModule,
         CodeHighlighterModule

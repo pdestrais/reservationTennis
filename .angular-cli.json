@@ -20,17 +20,19 @@
       "prefix": "app",
       "styles": [
         "../node_modules/normalize.css/normalize.css",
-        "styles.css",
+        "../node_modules/bootstrap/dist/css/bootstrap.min.css",
         "../node_modules/primeng/resources/themes/bootstrap/theme.css",
         "../node_modules/font-awesome/css/font-awesome.min.css",
         "../node_modules/primeng/resources/primeng.min.css",
-        "../node_modules/fullcalendar/dist/fullcalendar.min.css"
+        "../node_modules/fullcalendar/dist/fullcalendar.min.css",
+        "styles.css"
       ],
       "scripts": [
         "../node_modules/moment/min/moment.min.js",
         "../node_modules/jquery/dist/jquery.min.js",
         "../node_modules/prismjs/prism.js",
-        "../node_modules/fullcalendar/dist/fullcalendar.js"
+        "../node_modules/fullcalendar/dist/fullcalendar.js",
+        "../node_modules/fullcalendar/dist/locale-all.js"
       ],
       "environmentSource": "environments/environment.ts",
       "environments": {

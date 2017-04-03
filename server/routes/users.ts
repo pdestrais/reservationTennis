@@ -1,25 +1,76 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { randomBytes, pbkdf2Sync } from 'crypto';
-import { sign } from 'jsonwebtoken';
+import { sign,verify } from 'jsonwebtoken';
 import { secret, length, digest } from '../config';
 
 var https = require('https');
 
-const loginRouter: Router = Router();
 const dbHost = 'pdestrais.cloudant.com';
 
-const user = {
-    hashedPassword: '6fb3a68cb5fe34d0c2c9fc3807c8fa9bc0e7dd10023065ea4233d40a2d6bb4a' +
-    '7e336a82f48bcb5a7cc95b8a590cf03a4a07615a226d09a89420a342584a' +
-    'a28748336aa0feb7ac3a12200d13641c8f8e26398cfdaf268dd68746982bcf' +
-    '59415670655edf4e9ac30f6310bd2248cb9bc185db8059fe979294dd3611fdf28c2b731',
-    salt: 'OxDZYpi9BBJUZTTaC/yuuF3Y634YZ90KjpNa+Km4qGgZXGI6vhSWW0T91' +
-    'rharcQWIjG2uPZEPXiKGnSAQ73s352aom56AIYpYCfk7uNsd+7AzaQ6dxTnd9AzCCdIc/J' +
-    '62JohpHPJ5eGHUJJy3PAgHYcfVzvBHnIQlTJCQdQAonQ=',
-    username: 'john'
-};
+const userRouter: Router = Router();
 
-loginRouter.post('/register', function (request: Request, response: Response, next: NextFunction) {
+// get user by id
+userRouter.get("/:user_id", (request: Request, response: Response, next: NextFunction) => {
+    
+    //first verify jwt token
+    var token = request.get('authorization');
+
+    verify(token, secret, function(tokenError) {
+        if (tokenError) {
+            return response.status(403).json({
+                message: 'Invalid token, please Log in first'
+            });
+        }
+
+        next();
+    });
+
+    // if token is ok, continue
+    var options = {
+        host: dbHost,
+        path: '/resa_tennis/'+request.param("user_id"),
+        method: 'GET',
+		rejectUnauthorized: false,
+		auth: "pdestrais:id513375",
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };  
+    console.log('/fectching userid :', request.param("user_id"));
+
+    var req = https.request(options, (res) => {
+        //console.log('statusCode:', res.statusCode);
+        //console.log('headers:', res.headers);
+        var body = '';
+        res.on('data', (d) => {
+            body += d;
+            process.stdout.write(d);
+        });
+        res.on('end', function() {
+                // Data reception is done, do whatever with it!
+                //console.log("before parsing - body : "+body);
+               var parsed:any = {};
+               try {
+                    parsed = JSON.parse(body);
+                } catch(e) {
+                    parsed = {};
+                    console.log("error parsing result");
+                }
+                response.json({
+                    doc: parsed
+                });
+        });
+    });
+
+    req.on('error', (e) => {
+        console.error("Node Server Request got error: " + e.message);
+    });
+    req.end();
+
+});
+
+// User create
+userRouter.post('/', function (request: Request, response: Response, next: NextFunction) {
     if (!request.body.hasOwnProperty('password')) {
         let err = new Error('No password');
         return next(err);
@@ -34,7 +85,8 @@ loginRouter.post('/register', function (request: Request, response: Response, ne
         response.status(500).json({ error: err});
     }
     //store user credentials (user,password,salt and other required info) into the database
-	var reqData = {type:"membre",
+	var reqData = {_id:"member|"+request.body.username,
+                    type:"membre",
                     username:request.body.username,
                     password:hashedPw.toString('hex'),
                     salt:salt,
@@ -47,7 +99,7 @@ loginRouter.post('/register', function (request: Request, response: Response, ne
                 };
     var options = {
         host: dbHost,
-        path: '/resa_tennis/_find',
+        path: '/resa_tennis',
         method: 'POST',
 		rejectUnauthorized: false,
 		auth: "pdestrais:id513375",
@@ -59,8 +111,6 @@ loginRouter.post('/register', function (request: Request, response: Response, ne
     console.log('/registration data:', JSON.stringify(reqData));
 
     var req = https.request(options, (res) => {
-        //console.log('statusCode:', res.statusCode);
-        //console.log('headers:', res.headers);
         var body = '';
         res.on('data', (d) => {
             body += d;
@@ -68,7 +118,6 @@ loginRouter.post('/register', function (request: Request, response: Response, ne
         });
         res.on('end', function() {
                 // Data reception is done, do whatever with it!
-                //console.log("before parsing - body : "+body);
                var parsed = {};
                try {
                     parsed = JSON.parse(body);
@@ -91,8 +140,7 @@ loginRouter.post('/register', function (request: Request, response: Response, ne
 });
 
 // login method
-loginRouter.post('/', function (request: Request, response: Response, next: NextFunction) {
-
+userRouter.post('/login', function (request: Request, response: Response, next: NextFunction) {
     // get user credentials from the database
     var selector = {
                 "selector": {
@@ -119,7 +167,7 @@ loginRouter.post('/', function (request: Request, response: Response, next: Next
             'Content-Length': Buffer.byteLength(JSON.stringify(selector))
         }
     };  
-    console.log('/login selctor :', JSON.stringify(selector));
+    console.log('/login selector :', JSON.stringify(selector));
 
     var req = https.request(options, (res) => {
         //console.log('statusCode:', res.statusCode);
@@ -138,25 +186,23 @@ loginRouter.post('/', function (request: Request, response: Response, next: Next
                     // verify that the password stored in the database corresponds to the given password
                     var hash:Buffer;
                     try {
-                        hash = pbkdf2Sync(request.body.password, parsed.doc.salt, 10000, length, digest);
+                        hash = pbkdf2Sync(request.body.password, parsed.docs[0].salt, 10000, length, digest);
                     } catch (e) {
-                        response.json({error:e});
+                        response.json({error:"error when calculating password hash : "+JSON.stringify(e)});
                     }
                     // check if password is correct by recalculating hash on paswword and comparing with stored value
-                        if (hash.toString('hex') === parsed.doc.hashedPassword) {
-                            const token = sign({'user': parsed.doc.username, permissions: []}, secret, { expiresIn: '7d' });
-                            response.json({'jwt': token});
-
+                        if (hash.toString('hex') === parsed.docs[0].password) {
+                            const token = sign({'user': parsed.docs[0].username, permissions: []}, secret, { expiresIn: '7d' });
+                            parsed.docs[0].token = token;
+                            response.json(parsed.docs[0]);
                         } else {
+                            console.log('wrong password');
                             response.json({message: 'Wrong password'});
                         }
                 } catch(e) {
                     parsed = {};
-                    console.log("error parsing result");
+                    console.log("error parsing result :"+JSON.stringify(e));
                 }
-                response.json({
-                    doc: parsed
-                });
         });
     });
 
@@ -168,4 +214,4 @@ loginRouter.post('/', function (request: Request, response: Response, next: Next
 
 });
 
-export { loginRouter }
+export { userRouter };

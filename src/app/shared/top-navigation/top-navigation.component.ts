@@ -1,5 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef } from '@angular/core';
-import {TabMenuModule,MenuItem} from 'primeng/primeng';
+import { MenuItem } from 'primeng/primeng';
+
+import { Router } from '@angular/router';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -11,19 +13,26 @@ export class TopNavigationComponent implements OnInit {
 
   @ViewChild('topnav') topnav: ElementRef;
   private items: MenuItem[];
+  private loggedInUser: string = JSON.parse(localStorage.getItem('currentUser'));
   
-  constructor() { }
+  constructor(private router: Router) { }
 
   ngOnInit() {
     this.items = [
             {label: 'Gestion Membres', icon: 'fa-users', routerLink: ['/dashboard']},
             {label: 'Profile', icon: 'fa-user', routerLink: ['/profile']},
-            {label: 'Schedule', icon: 'fa-calendar', routerLink: ['/schedule']}
+            {label: 'Planning Réservations', icon: 'fa-calendar', routerLink: ['/schedule']}
         ];
   }
 
   toggle() {
     this.topnav.nativeElement.classList.toggle(['responsive']);
   }
+
+    logout() {
+        localStorage.removeItem('currentUser');
+        this.router.navigate(['/login']);
+    }
+    
 
 }
