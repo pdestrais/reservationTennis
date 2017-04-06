@@ -22,16 +22,16 @@
   <a class="navbar-brand" href="#">Réservation Tennis du Domaine d'anjou</a>
   <ul class="navbar-nav mr-auto">
     <li class="nav-item active"><a class="nav-link" routerLink="/schedule">Occupation du terrain</a></li>
-    <li class="nav-item"><a class="nav-link" routerLink="/dashboard">Membres <span class="sr-only">(current)</span></a></li>
-    <li class="nav-item"><a class="nav-link" routerLink="/profile">Vos informations</a></li>
+    <li class="nav-item"><a class="nav-link" routerLink="/members">Membres <span class="sr-only">(current)</span></a></li>
   </ul>
-  <ul class="nav navbar-nav navbar-right">
-    <li><span class="navbar-text">
-      Bienvenue {{loggedInUser.username}}&nbsp;
+  <ul *ngIf="loggedInUser" class="nav navbar-nav navbar-right">
+    <li><span class="navbar-text" style="border-right-style: outset;padding-right:10px;">
+      Bienvenue {{loggedInUser.username}}
     </span></li>
   </ul>
   <form class="form-inline">
-    <button class="btn btn-outline-success" type="button" (click)="logout()">logout</button>
+    <a *ngIf="!loggedInUser" href="#" class="btn btn-success" role="button" aria-pressed="true" routerLink="/login">Login</a>
+    <button *ngIf="loggedInUser" class="btn btn-outline-success" style="margin-left: 0.5em;" type="button" (click)="logout()">logout</button>
   </form>
 
 </nav>  

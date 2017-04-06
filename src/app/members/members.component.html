@@ -1,0 +1,175 @@
+<!--<div class="list-group">
+  <a href="#" class="list-group-item list-group-item-action" *ngFor="let user of users" (click)="onSelect(user)">{{user.username}}</a>
+</div>
+-->
+<p-dataList [value]="users" [paginator]="true" [rows]="5">
+    <p-header>
+        Liste des membres
+    </p-header>
+<!--    <ng-template ngFor let-user [ngForOf]="users">
+    <template ngFor let-user [ngForOf]="users" let-i="index">
+-->
+      <template let-user let-i="index" pTemplate="item">
+        <div class="ui-grid ui-grid-responsive ui-fluid" style="font-size:16px;padding:20px;border-bottom:1px solid #D5D5D5;">
+            <div class="ui-grid-row">
+                <div class="ui-grid-col-2" style="text-align:center">
+                  <i class="fa fa-eye fa-2x mytooltip" (click)="selectUser(user)" style="cursor:pointer;float:left;margin-left:5px;margin-right:5px;">
+                    <span class="mytooltiptext">Visualiser données membre</span>
+                  </i>
+                  <i *ngIf="user.username == loggedInUser.username || loggedInUser.admin" class="fa fa-pencil fa-2x mytooltip" (click)="editUser(user)" style="cursor:pointer;float:left;margin-left:5px;margin-right:5px;">
+                      <span class="mytooltiptext">Mise à jour des données</span>
+                </i>
+                  <i *ngIf="user.username == loggedInUser.username" class="fa fa-key fa-2x mytooltip" (click)="changeUserPwd(user)" style="cursor:pointer;float:left;margin-left:5px;margin-right:5px;">
+                    <span class="mytooltiptext">Changer de mot de passe</span>
+                  </i>
+                  <i *ngIf="loggedInUser.admin" class="fa fa-trash fa-2x mytooltip" (click)="deleteUser(user,i)" style="cursor:pointer;float:left;margin-left:5px;margin-right:5px;">
+                    <span class="mytooltiptext">Supprimer le membre</span>
+                  </i>
+                </div>
+<!--                <div class="ui-grid-col-1" style="text-align:center">
+                </div>
+                <div class="ui-grid-col-1" style="text-align:center">
+                </div>
+                <div class="ui-grid-col-1" style="text-align:center">
+                </div>
+-->
+                <div class="ui-grid-col-5">
+                    <div class="ui-grid ui-grid-responsive ui-fluid">
+                        <div class="ui-grid-row">
+                            <div class="ui-grid-col-4">Nom: </div>
+                            <div class="ui-grid-col-8">{{user.lastname}}</div>
+                        </div>
+                        <div class="ui-grid-row">
+                            <div class="ui-grid-col-4">Nom d'utilisateur: </div>
+                            <div class="ui-grid-col-8">{{index}}{{user.username}}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui-grid-col-5">
+                    <div class="ui-grid ui-grid-responsive ui-fluid">
+                        <div class="ui-grid-row">
+                            <div class="ui-grid-col-4">Prénom: </div>
+                            <div class="ui-grid-col-8">{{user.firstname}}</div>
+                        </div>
+                        <div class="ui-grid-row">
+                            <div class="ui-grid-col-4">Adresse: </div>
+                            <div class="ui-grid-col-8">{{user.address}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </template>
+<!--    </ng-template>
+--></p-dataList>
+<a *ngIf="loggedInUser.admin" [routerLink]="['/register']" class="btn btn-link">Créer nouvel utilisateur</a>
+    
+<p-dialog header="Details membre" [(visible)]="displayDialog" [responsive]="true" showEffect="fade" [modal]="true" width="600" (onAfterHide)="onDialogHide()">
+    <div class="ui-grid ui-grid-responsive ui-fluid" *ngIf="selectedUser" style="font-size:16px;text-align:center;padding:20px">
+        <div class="ui-grid-row">
+            <div class="ui-grid-col-4">nom d'utilisateur: </div>
+            <div class="ui-grid-col-8">{{selectedUser.username}}</div>
+        </div>
+        <div class="ui-grid-row">
+            <div class="ui-grid-col-4">Prénom: </div>
+            <div class="ui-grid-col-8">{{selectedUser.firstname}}</div>
+        </div>
+        <div class="ui-grid-row">
+            <div class="ui-grid-col-4">Nom: </div>
+            <div class="ui-grid-col-8">{{selectedUser.lastname}}</div>
+        </div>
+        <div class="ui-grid-row">
+            <div class="ui-grid-col-4">Adresse: </div>
+            <div class="ui-grid-col-8">{{selectedUser.address}}</div>
+        </div>
+        <div class="ui-grid-row">
+            <div class="ui-grid-col-4">email: </div>
+            <div class="ui-grid-col-8">{{selectedUser.email}}</div>
+        </div>
+        <div class="ui-grid-row">
+            <div class="ui-grid-col-4">Téléphone: </div>
+            <div class="ui-grid-col-8">{{selectedUser.phone}}</div>
+        </div>
+    </div>
+</p-dialog>
+<p-dialog header="Modification données" [(visible)]="editDialog" [responsive]="true" showEffect="fade" [modal]="true" width="400" (onAfterHide)="onDialogHide()">
+    <div *ngIf="selectedUser">
+      <form name="form" (ngSubmit)="f.form.valid && update()" #f="ngForm" novalidate>
+        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !firstname.valid }">
+            <label for="firstname">Prénom</label>
+            <input type="text" class="form-control" name="firstname" [(ngModel)]="model.firstname" #firstname="ngModel" required />
+            <div *ngIf="f.submitted && !firstname.valid" class="help-block">Le prénom est requis</div>
+        </div>
+        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !lastname.valid }">
+            <label for="lastname">Nom</label>
+            <input type="text" class="form-control" name="lastname" [(ngModel)]="model.lastname" #lastname="ngModel" required />
+            <div *ngIf="f.submitted && !lastname.valid" class="help-block">Le nom est requis</div>
+        </div>
+        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !address.valid }">
+            <label for="address">Adresse</label>
+            <input type="text" class="form-control" name="adress" [(ngModel)]="model.address" #address="ngModel" required />
+            <div *ngIf="f.submitted && !address.valid" class="help-block">l'adresse est requise</div>
+        </div>
+        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !email.valid }">
+            <label for="email">email</label>
+            <input type="text" class="form-control" name="email" [(ngModel)]="model.email" #email="ngModel" />
+            <div *ngIf="f.submitted && !email.valid" class="help-block">l'email est requis</div>
+        </div>
+        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !phone.valid }">
+            <label for="phone">Téléphone</label>
+            <input type="text" class="form-control" name="phone" [(ngModel)]="model.phone" #phone="ngModel" />
+            <div *ngIf="f.submitted && !phone.valid" class="help-block">le téléphone est requis</div>
+        </div>
+        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !username.valid }">
+            <label for="username">Nom d'utilisateur</label>
+            <input type="text" class="form-control" name="username" [(ngModel)]="model.username" #username="ngModel" required />
+            <div *ngIf="f.submitted && !username.valid" class="help-block">le nom d'utilisateur est requis</div>
+        </div>
+<!--        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !password.valid }">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" name="password" [(ngModel)]="model.password" #password="ngModel" required />
+            <div *ngIf="f.submitted && !password.valid" class="help-block">le mot de passe est requis</div>
+        </div>
+-->        <div class="form-group">
+            <button [disabled]="loading" class="btn btn-primary">Modifier</button>
+            <img *ngIf="loading" src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==" />
+<!--            <a [routerLink]="['/login']" class="btn btn-link">Cancel</a>
+-->        </div>
+      </form>
+    </div>
+</p-dialog>
+<p-dialog header="Changement mot de passe" [(visible)]="changePwdDialog" [responsive]="true" showEffect="fade" [modal]="true" width="400" (onAfterHide)="onDialogHide()">
+    <div *ngIf="model">
+      <form name="form" (ngSubmit)="f.form.valid && updatePwd()" #f="ngForm" novalidate>
+        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !currPassword.valid }">
+            <label for="currPassword">Mot de passe actuel</label>
+            <input type="password" class="form-control" name="currentPassword" [(ngModel)]="currPassword" #currentPassword="ngModel" required />
+            <div *ngIf="f.submitted && !currentPassword.valid" class="help-block">le mot de passe actuel est requis</div>
+        </div>
+        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !new1Password.valid }">
+            <label for="newPassword1">Nouveau mot de passe</label>
+            <input type="password" class="form-control" name="newPassword1" [(ngModel)]="newPassword1" #new1Password="ngModel" required />
+            <div *ngIf="f.submitted && !new1Password.valid" class="help-block">le nouveau mot de passe est requis</div>
+        </div>
+        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !new2Password.valid }">
+            <label for="newPassword2">Confirmez nouveau mot de passe actuel</label>
+            <input type="password" class="form-control" name="newPassword2" [(ngModel)]="newPassword2" #new2Password="ngModel" required />
+            <div *ngIf="f.submitted && !new2Password.valid" class="help-block">le nouveau mot de passe est requis</div>
+        </div>
+<!--        <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !newPassword1.valid }">
+            <label for="newPassword1">Mot de passe actuel</label>
+            <input type="password" class="form-control" name="newPassword1" [(ngModel)]="newPassword1" #newPassword1="ngModel" required />
+            <div *ngIf="f.submitted && !newPassword1.valid" class="help-block">le nouveau mot de passe est requis</div>
+        </div>
+            <div class="form-group" [ngClass]="{ 'has-danger': f.submitted && !newPassword2.valid }">
+            <label for="newPassword2">Mot de passe actuel</label>
+            <input type="password" class="form-control" name="password" [(ngModel)]="newPassword2" #newPassword2="ngModel" required />
+            <div *ngIf="f.submitted && !newPassword2.valid" class="help-block">le nouveau mot de passe est requis</div>
+        </div>
+-->        <div class="form-group">
+            <button [disabled]="loading" class="btn btn-primary">Modifier mot de passe</button>
+            <img *ngIf="loading" src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==" />
+        </div>
+      </form>
+    </div>
+</p-dialog>

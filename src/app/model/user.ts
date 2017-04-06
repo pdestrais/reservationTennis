@@ -6,7 +6,7 @@ export class User {
     salt: string;
     lastname: string;
     firstname: string;
-    adress: string;
+    address: string;
     email: string;
     phone: string;
 }

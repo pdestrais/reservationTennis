@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit, NgZone } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { AlertService } from '../service/alert.service';
@@ -18,7 +18,8 @@ export class LoginComponent implements OnInit {
         private route: ActivatedRoute,
         private router: Router,
         private authenticationService: AuthenticationService,
-        private alertService: AlertService) { }
+        private alertService: AlertService,
+        private zone: NgZone) { }
 
     ngOnInit() {
         // reset login status
@@ -29,15 +30,19 @@ export class LoginComponent implements OnInit {
     }
 
     login() {
-        this.loading = true;
-        this.authenticationService.login(this.model.username, this.model.password)
+        this.zone.run(() => {
+            this.loading = true;
+            this.authenticationService.login(this.model.username, this.model.password)
             .subscribe(
                 data => {
+                    console.log("user : "+this.model.username+" logged in");
                     this.router.navigate([this.returnUrl]);
                 },
                 error => {
                     this.alertService.error(error);
                     this.loading = false;
-                });
+                }
+            );
+        });
     }
 }

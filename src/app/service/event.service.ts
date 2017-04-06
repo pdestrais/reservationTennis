@@ -1,60 +1,56 @@
-import {Injectable} from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import {Http, Response} from '@angular/http';
-import * as PouchDB from 'pouchdb'
-
+import * as PouchDB from 'pouchdb';
+import { Subject } from 'rxjs/Subject';
+import {DataService} from './data.service'
 import { Event} from '../model/event';
 
 @Injectable()
 export class EventService {
 
-    private db: any;
-    private remote: any;
-    private dataUrl = '/api';  // URL to web API                    
+    postSubject: any = new Subject();
+
     private events: Event[];
 
-    constructor(private http: Http) {
-        this.db = new PouchDB('resa_tennis');
-    
-        this.remote = 'http://localhost:5984/resa_tennis';
-    
-        let options = {
-            live: true,
-            retry: true,
-            continuous: true
-        };
- 
-        this.db.sync(this.remote, options);
-        this.db.changes({live: true, since: 'now', include_docs: true}).on('change', (change) => {
-        this.handleChange(change);
-      });
-    }
+    constructor(public dataService: DataService, public zone: NgZone) {
 
-    handleChange(change){
-        console.log("incoming change : "+JSON.stringify(change));
-        let changedDoc = null;
-        let changedIndex = null;
-        
-        this.events.forEach((doc, index) => {
-            if(doc._id === change.id){
-            changedDoc = doc;
-            changedIndex = index;
+        this.dataService.db.changes({live: true, since: 'now', include_docs: true}).on('change', (change) => {
+            if(change.doc.type === 'reservation'){
+                this.handleEventChanges(change);
             }
         });
-        
-        //A document was deleted
-        if(change.deleted){
-            this.events.splice(changedIndex, 1);
-        } 
-        else {
-            //A document was updated
-            if(changedDoc){
-                this.events[changedIndex] = change.doc;
+    }
+
+    handleEventChanges(change){
+        this.zone.run(() => {
+            console.log("incoming change : "+JSON.stringify(change));
+            let changedDoc = null;
+            let changedIndex = null;
+            
+            this.events.forEach((doc, index) => {
+                if(doc._id === change.id){
+                changedDoc = doc;
+                changedIndex = index;
+                }
+            });
+            
+            //A document was deleted
+            if(change.deleted){
+                this.events.splice(changedIndex, 1);
             } 
-            //A document was added
             else {
-                this.events.push(change.doc); 
-            }
-        }    
+                //A document was updated
+                if(changedDoc){
+                    this.events[changedIndex] = change.doc;
+                } 
+                //A document was added
+                else {
+                    this.events.push(change.doc); 
+                }
+            } 
+            this.postSubject.next(this.events);   
+        });
+ 
     }
 
     // startDate and endDate must be in the form of "YYYY-MM-DD"
@@ -100,7 +96,7 @@ export class EventService {
         }
         
         return new Promise(resolve => {
-            this.db.allDocs({
+            this.dataService.db.allDocs({
                 include_docs: true,
                 startkey: "reservation|"+startDate+"T00:00:00",
                 endkey:"reservation|"+endDate+"\uffff"
@@ -123,7 +119,7 @@ export class EventService {
             return Promise.resolve(this.events);
         }
         return new Promise(resolve => {
-            this.db.allDocs({
+            this.dataService.db.allDocs({
                 include_docs: true,
                 startkey: "reservation",
                 endkey:"reservation\uffff"
@@ -145,14 +141,14 @@ export class EventService {
     createEvent(event) {
         event._id = "reservation|"+event.start+"|"+event.end+"|"+event.title;
         event.type = "reservation";
-        return this.db.post(event);
+        return this.dataService.db.post(event);
 /*        return this.http.post(this.dataUrl+"/events",event)
                     .map(res => res.json());
 */
     }
 
     updateEvent(event) {
-        return this.db.put(event).catch((err) => {
+        return this.dataService.db.put(event).catch((err) => {
             console.log(err);
         });
 /*        return this.http.put(this.dataUrl+"/events",event)
@@ -161,18 +157,11 @@ export class EventService {
     }
 
     deleteEvent(event) {
-        return this.db.remove(event).catch((err) => {
+        return this.dataService.db.remove(event).catch((err) => {
             console.log(err);
         });
 /*        return this.http.delete(this.dataUrl+"/events",event)
                     .map(res => res.json());
 */
     }
-    
-
-    getMockEvents() {
-        return this.http.get(this.dataUrl+"/events")
-                    .map(res => <any[]> res.json().data);
-    }
-
 }

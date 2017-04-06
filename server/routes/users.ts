@@ -76,66 +76,258 @@ userRouter.post('/', function (request: Request, response: Response, next: NextF
         return next(err);
     }
 
-    const salt = randomBytes(128).toString('base64');
+    var token = request.get('authorization');
 
-    var hashedPw:Buffer;
-    try {
-        hashedPw = pbkdf2Sync(request.body.password, salt, 10000, length, digest);
-    } catch (err) {
-        response.status(500).json({ error: err});
-    }
-    //store user credentials (user,password,salt and other required info) into the database
-	var reqData = {_id:"member|"+request.body.username,
-                    type:"membre",
-                    username:request.body.username,
-                    password:hashedPw.toString('hex'),
-                    salt:salt,
-                    lastname:request.body.lastname||"",
-                    firstname:request.body.firstname||"",
-                    address:request.body.addres||"",
-                    email:request.body.email||"",
-                    phone:request.body.phone||"",
-                    admin:false
-                };
-    var options = {
-        host: dbHost,
-        path: '/resa_tennis',
-        method: 'POST',
-		rejectUnauthorized: false,
-		auth: "pdestrais:id513375",
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(JSON.stringify(reqData))
-        }
-    };  
-    console.log('/registration data:', JSON.stringify(reqData));
+    verify(token, secret, function(tokenError) {
+        if (tokenError) {
+            return response.status(403).json({
+                message: 'Invalid token, please Log in first'
+            });
+        } else {
+            const salt = randomBytes(128).toString('base64');
 
-    var req = https.request(options, (res) => {
-        var body = '';
-        res.on('data', (d) => {
-            body += d;
-            process.stdout.write(d);
-        });
-        res.on('end', function() {
-                // Data reception is done, do whatever with it!
-               var parsed = {};
-               try {
-                    parsed = JSON.parse(body);
-                } catch(e) {
-                    parsed = {};
-                    console.log("error parsing result");
+            var hashedPw:Buffer;
+            try {
+                hashedPw = pbkdf2Sync(request.body.password, salt, 10000, length, digest);
+            } catch (err) {
+                response.status(500).json({ error: err});
+            }
+            //store user credentials (user,password,salt and other required info) into the database
+            var reqData = {_id:"membre|"+request.body.username,
+                            type:"membre",
+                            username:request.body.username,
+                            password:hashedPw.toString('hex'),
+                            salt:salt,
+                            lastname:request.body.lastname||"",
+                            firstname:request.body.firstname||"",
+                            address:request.body.address||"",
+                            email:request.body.email||"",
+                            phone:request.body.phone||"",
+                            admin:request.body.admin||false
+                        };
+            var options = {
+                host: dbHost,
+                path: '/resa_tennis',
+                method: 'POST',
+                rejectUnauthorized: false,
+                auth: "pdestrais:id513375",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(JSON.stringify(reqData))
                 }
-                response.json({
-                    doc: parsed
+            };  
+            console.log('/registration data:', JSON.stringify(reqData));
+
+            var req = https.request(options, (res) => {
+                var body = '';
+                res.on('data', (d) => {
+                    body += d;
+                    process.stdout.write(d);
                 });
-        });
+                res.on('end', function() {
+                        // Data reception is done, do whatever with it!
+                    var parsed = {};
+                    try {
+                            parsed = JSON.parse(body);
+                        } catch(e) {
+                            parsed = {};
+                            console.log("error parsing result");
+                        }
+                        response.json({
+                            doc: parsed
+                        });
+                });
+            });
+
+            req.on('error', (e) => {
+                console.error("Node Server Request got error: " + e.message);
+            });
+            req.write(JSON.stringify(reqData));
+            req.end();
+        }
     });
 
-    req.on('error', (e) => {
-        console.error("Node Server Request got error: " + e.message);
+});
+
+// User update
+userRouter.put('/', function (request: Request, response: Response, next: NextFunction) {
+
+    if (!request.body.hasOwnProperty('_rev')||!request.body.hasOwnProperty('_id')) {
+        let err = new Error('No document id or revision');
+        return next(err);
+    }
+
+    var token = request.get('authorization');
+
+    verify(token, secret, function(tokenError) {
+        if (tokenError) {
+            return response.status(403).json({
+                message: 'Invalid token, please Log in first'
+            });
+        } else {
+            //store user credentials (user,password,salt and other required info) into the database
+            var reqData = {_id:request.body._id,
+                            _rev:request.body._rev,
+                            type:"membre",
+                            salt:request.body.salt,
+                            password:request.body.password,
+                            username:request.body.username,
+                            lastname:request.body.lastname||"",
+                            firstname:request.body.firstname||"",
+                            address:request.body.address||"",
+                            email:request.body.email||"",
+                            phone:request.body.phone||"",
+                            admin:request.body.admin
+                        };
+            var options = {
+                host: dbHost,
+                path: '/resa_tennis/'+request.body._id,
+                method: 'PUT',
+                rejectUnauthorized: false,
+                auth: "pdestrais:id513375",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(JSON.stringify(reqData))
+                }
+            };  
+            console.log('/Updated User data:', JSON.stringify(reqData));
+
+            var req = https.request(options, (res) => {
+                var body = '';
+                res.on('data', (d) => {
+                    body += d;
+                    process.stdout.write(d);
+                });
+                res.on('end', function() {
+                        // Data reception is done, do whatever with it!
+                    var parsed:any = {};
+                    try {
+                            parsed = JSON.parse(body);
+                        } catch(e) {
+                            parsed = {};
+                            console.log("error parsing result");
+                        }
+                        if (parsed.error)
+                            return response.status(500).json({
+                                message: parsed.error+' - '+parsed.reason
+                            });
+                        response.json({
+                            doc: parsed
+                        });
+                });
+            });
+
+            req.on('error', (e) => {
+                console.error("Node Server Request got error: " + e.message);
+            });
+            req.write(JSON.stringify(reqData));
+            req.end();
+        }
     });
-    req.write(JSON.stringify(reqData));
-    req.end();
+
+});
+
+// User password update
+userRouter.put('/changePwd', function (request: Request, response: Response, next: NextFunction) {
+    console.log("body : "+JSON.stringify(request.body));
+
+    if (!request.body.user || !request.body.currPwd || !request.body.newPwd|| !request.body.user.hasOwnProperty('_rev') ||!request.body.user.hasOwnProperty('_id')) {
+        let err = new Error('No document id or revision or password');
+        return next(err);
+    }
+
+    var token = request.get('authorization');
+
+    verify(token, secret, function(tokenError) {
+        if (tokenError) {
+            return response.status(403).json({
+                message: 'Invalid token, please Log in first'
+            });
+        } else {
+            // verify the Hashed currPwd corresponds to the hashed user password
+            var hashedPw:Buffer;
+            try {
+                console.log("before Hashed pwd : "+request.body.currPwd+'-'+request.body.user.salt);
+                hashedPw = pbkdf2Sync(request.body.currPwd, request.body.user.salt, 10000, length, digest);
+                console.log("Hashed pwd : "+hashedPw);
+            } catch (err) {
+                response.status(500).json({ error: err});
+            }
+            console.log("Hashed pwd : "+hashedPw);
+            if (hashedPw.toString('hex')!=request.body.user.password)
+                return response.status(401).json({
+                    message: 'Mot de passe actuel non valide'
+                });
+            // If currPwd is ok, then change password with new one
+            else {
+                const salt = randomBytes(128).toString('base64');
+                try {
+                    hashedPw = pbkdf2Sync(request.body.newPwd, salt, 10000, length, digest);
+                } catch (err) {
+                    response.status(500).json({ error: err});
+                }
+
+                //store user credentials (user,password,salt and other required info) into the database
+                var reqData = {_id:request.body.user._id,
+                                _rev:request.body.user._rev,
+                                type:"membre",
+                                salt:salt,
+                                password:hashedPw.toString('hex'),
+                                username:request.body.user.username,
+                                lastname:request.body.user.lastname||"",
+                                firstname:request.body.user.firstname||"",
+                                address:request.body.user.address||"",
+                                email:request.body.user.email||"",
+                                phone:request.body.user.phone||"",
+                                admin:request.body.user.admin
+                            };
+                var options = {
+                    host: dbHost,
+                    path: '/resa_tennis/'+request.body.user._id,
+                    method: 'PUT',
+                    rejectUnauthorized: false,
+                    auth: "pdestrais:id513375",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(JSON.stringify(reqData))
+                    }
+                };  
+                console.log('/Updated User data:', JSON.stringify(reqData));
+
+                var req = https.request(options, (res) => {
+                    var body = '';
+                    res.on('data', (d) => {
+                        body += d;
+                        process.stdout.write(d);
+                    });
+                    res.on('end', function() {
+                            // Data reception is done, do whatever with it!
+                        var parsed:any = {};
+                        try {
+                                parsed = JSON.parse(body);
+                            } catch(e) {
+                                parsed = {};
+                                console.log("error parsing result");
+                            }
+                            if (parsed.error)
+                                return response.status(500).json({
+                                    message: parsed.error+' - '+parsed.reason
+                                });
+                            response.json({
+                                doc: parsed
+                            });
+                    });
+                });
+
+                req.on('error', (e) => {
+                    console.error("Node Server Request got error: " + e.message);
+                });
+                req.write(JSON.stringify(reqData));
+                req.end();
+            }
+
+        }
+    });
 
 });
 
