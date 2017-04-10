@@ -26,11 +26,11 @@
                 <div class="ui-grid-col-4"><p-calendar [(ngModel)]="endDate" dateFormat="yy-mm-dd" dataType="string" ></p-calendar></div>
                 <div class="ui-grid-col-4"><p-dropdown [options]="times" [(ngModel)]="endTime" [style]="{'width':'140px'}" placeholder="Heure fin"></p-dropdown></div>
             </div>
-            <div class="ui-grid-row">
+<!--            <div class="ui-grid-row">
                 <div class="ui-grid-col-4"><label for="allday">All Day</label></div>
                 <div class="ui-grid-col-8"><p-checkbox [(ngModel)]="event.allDay" binary="checkbox"></p-checkbox></div>
             </div>
-        </div>
+-->        </div>
         <p-footer>
             <div *ngIf="allowToModify" class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix">
                 <button type="button" pButton icon="fa-close" (click)="deleteEvent()" label="Delete" [disabled]="!event?._id"></button>

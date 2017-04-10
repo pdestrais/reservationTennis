@@ -8,7 +8,7 @@ import { AppRoutingModule } from './app.router';
 //import { effects, store, instrumentation } from './store';
 import { SharedModule } from './shared/shared.module';
 import { ClubscheduleModule } from './clubschedule/clubschedule.module'
-import { WeatherService } from './weather/weather.service';
+//import { WeatherService } from './weather/weather.service';
 import { MembersModule} from './members/members.module'
 
 import { AlertComponent } from './alert/alert.component';
@@ -44,7 +44,7 @@ import { HomeComponent } from './home/home.component';
     MembersModule
   ],
   providers: [
-    WeatherService, 
+//    WeatherService, 
     DataService,
     EventService, 
     AuthGuard,

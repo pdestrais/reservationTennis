@@ -91,6 +91,7 @@ export class Clubschedule implements OnInit {
             this.endTime = tmpDate.add(1, 'h').format("HH:mm:SS");
         }
         this.dialogVisible = true;
+        this.allowToModify = true;
     }
     
     handleEventClick(e) {

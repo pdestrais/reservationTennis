@@ -12,9 +12,9 @@ const routes: Route[] = [
   { path: 'login', component: LoginComponent },
   { path: 'register', canActivate: [AuthGuard], component: RegisterComponent },
   { path: 'members', canActivate: [AuthGuard], component: MembersComponent },
-  { loadChildren: 'app/dashboard/dashboard.module#DashboardModule', path: 'dashboard' },
-  { loadChildren: 'app/profile/profile.module#ProfileModule', path: 'profile' },
-  { loadChildren: 'app/weather/weather.module#WeatherModule', path: 'weather' },
+//  { loadChildren: 'app/dashboard/dashboard.module#DashboardModule', path: 'dashboard' },
+//  { loadChildren: 'app/profile/profile.module#ProfileModule', path: 'profile' },
+//  { loadChildren: 'app/weather/weather.module#WeatherModule', path: 'weather' },
 
   // otherwise redirect to home
   { path: '**', redirectTo: '' }
