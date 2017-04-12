@@ -87,8 +87,8 @@ export class Clubschedule implements OnInit {
             this.startTime = "09:00:00";
             this.endTime = "10:00:00";
         } else {
-            let tmpDate = moment(event.date.format(),"YYYY-DD-MMTHH:mm:SS");
-            this.startDate = tmpDate.format("YYYY-DD-MM");
+            let tmpDate = moment(event.date.format());
+            this.startDate = tmpDate.format("YYYY-MM-DD");
             this.endDate = this.startDate;
             this.startTime = tmpDate.format("HH:mm:SS");
             this.endTime = tmpDate.add(1, 'h').format("HH:mm:SS");
