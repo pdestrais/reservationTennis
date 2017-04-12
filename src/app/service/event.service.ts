@@ -15,7 +15,7 @@ export class EventService {
     constructor(public dataService: DataService, public zone: NgZone) {
 
         this.dataService.db.changes({live: true, since: 'now', include_docs: true}).on('change', (change) => {
-            if(change.doc.type === 'reservation'){
+            if(change.doc.type === 'reservation' || change.deleted){
                 this.handleEventChanges(change);
             }
         });

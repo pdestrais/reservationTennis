@@ -6,8 +6,9 @@
 </div>
 
 <div class="content-section implementation">
-    <p-schedule [events]="events" [header]="header" minTime="06:00:00" maxTime="22:00:00" locale="fr" [eventLimit]="4" [editable]="true"
-                (onDayClick)="handleDayClick($event)" (onEventClick)="handleEventClick($event)"></p-schedule>
+    <p-schedule [events]="events" [header]="header" minTime="06:00:00" maxTime="22:00:00" locale="fr" eventOverlap=false [eventLimit]=true [editable]="true"
+                (onDayClick)="handleDayClick($event)" (onEventClick)="handleEventClick($event)" (onEventResize)="handleEventResize($event)"
+                (onEventDrop)="handleEventMove($event)"></p-schedule>
     
     <p-dialog header="Event Details" [(visible)]="dialogVisible" [responsive]="true" showEffect="fade" [modal]="false" [contentStyle]="{'overflow':'visible'}"
         [style]="{'overflow':'visible'}" [resizable]="true" width="500">

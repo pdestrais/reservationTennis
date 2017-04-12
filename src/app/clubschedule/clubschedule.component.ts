@@ -61,7 +61,10 @@ export class Clubschedule implements OnInit {
                                         this.getMonthDateRange(nowEnd.year(),nowEnd.month()).end.format("YYYY-MM-DD"))
 */
             this.eventService.getAllEvents()
-            .then(events => {this.events = events; console.log("fetched events : "+JSON.stringify(this.events));});
+            .then(events => {
+                this.events = events; 
+                this.events.map(event => event.id = event._id)
+                console.log("fetched events : "+JSON.stringify(this.events));});
         }
 
         this.header = {
@@ -94,6 +97,22 @@ export class Clubschedule implements OnInit {
         this.allowToModify = true;
     }
     
+    handleEventMove(e) {
+        this.handleEventResize(e);
+    }
+
+    handleEventResize(e) {
+        this.event = new Event();
+        this.event.title = e.event.title;
+        this.startDate = e.event.start.format("YYYY-MM-DD");
+        this.startTime = e.event.start.format("HH:mm:SS");
+        this.endDate = e.event.end.format("YYYY-MM-DD");
+        this.endTime = e.event.end.format("HH:mm:SS");
+        this.event._id = e.event._id;
+        this.event._rev = e.event._rev;
+        this.saveEvent();
+    }
+
     handleEventClick(e) {
         this.event = new Event();
         this.event.title = e.calEvent.title;
@@ -117,12 +136,14 @@ export class Clubschedule implements OnInit {
         let overlap: boolean = false;
         for (let i=0;i<this.events.length;i++) {
             //if overlap
-            if (!(this.event.start >= this.events[i].end || this.event.end <= this.events[i].start))
+            if (!(this.event._id == this.events[i]._id) && !(this.event.start >= this.events[i].end || this.event.end <= this.events[i].start) )
                 {overlap = true;  break;}
             else { continue; }
         };
-        if (overlap)
-            this.alertService.error('la réservation chevauche une autre', true);
+        if (overlap) {
+            this.dialogVisible = false;
+            this.alertService.error('votre réservation est en conflit avec une autre réservation', true);
+        }
         else {
             //new event
             this.loading = true;
@@ -141,17 +162,31 @@ export class Clubschedule implements OnInit {
             }
             //update
             else {
-                this.eventService.updateEvent(this.event)
+                //When an event is updated, this means that it's start or end is changed. As those values are used in the doc_id, we have to suppress the document and create a new one.
+                this.eventService.deleteEvent(this.event)
                     .then(
                     data => {
-                        console.log("event updated");
-                        this.alertService.success('Mise à jour réussie', true);
+                        console.log("event deleted");
+                        delete this.event._id;
+                        delete this.event._rev;
+                        this.eventService.createEvent(this.event)
+                        .then(
+                        cdata => {
+                            console.log("event stored");
+                            this.event = null;
+                            this.loading = false;
+                            this.alertService.success('Mise à jour réussie', true);
+                        },
+                        error => {
+                            console.log("problem updating event");
+                            this.alertService.error(error);
+                            this.loading = false;
+                        });
                     },
                     error => {
                         this.alertService.error(error);
                         this.loading = false;
                     });
-                this.event = null;
             }
             this.dialogVisible = false;
         }
