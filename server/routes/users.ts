@@ -375,25 +375,34 @@ userRouter.post('/login', function (request: Request, response: Response, next: 
                var parsed:any = {};
                try {
                     parsed = JSON.parse(body);
-                    // verify that the password stored in the database corresponds to the given password
-                    var hash:Buffer;
-                    try {
-                        hash = pbkdf2Sync(request.body.password, parsed.docs[0].salt, 10000, length, digest);
-                    } catch (e) {
-                        response.json({error:"error when calculating password hash : "+JSON.stringify(e)});
-                    }
-                    // check if password is correct by recalculating hash on paswword and comparing with stored value
+                    // If a user corresponding to the username has been found
+                    if (parsed.docs && parsed.docs[0] && parsed.docs[0].username) {
+                        // verify that the password stored in the database corresponds to the given password
+                        // 1. First step is to calculate a Hash based on given password and hash key (salt)
+                        var hash:Buffer;
+                        try {
+                            hash = pbkdf2Sync(request.body.password, parsed.docs[0].salt, 10000, length, digest);
+                        } catch (e) {
+                            console.log("[LOGIN]error when calculating password hash : "+JSON.stringify(e));
+                            response.status(500).json({error:"error when calculating password hash"});
+                        }
+                        // 2. Second step is to check if password is correct by comparing calculated hash with stored password value
                         if (hash.toString('hex') === parsed.docs[0].password) {
                             const token = sign({'user': parsed.docs[0].username, permissions: []}, secret, { expiresIn: '7d' });
                             parsed.docs[0].token = token;
                             response.json(parsed.docs[0]);
                         } else {
                             console.log('wrong password');
-                            response.json({message: 'Wrong password'});
+                            response.status(200).json({message: 'Wrong password'});
                         }
+                    } else {
+                        console.log('[LOGIN] username not found');
+                        response.status(200).json({message:"Username not found"});
+                    }
                 } catch(e) {
                     parsed = {};
-                    console.log("error parsing result :"+JSON.stringify(e));
+                    console.log("[LOGIN]error parsing result :"+JSON.stringify(e));
+                    response.status(500).json({error:"internal server error"});
                 }
         });
     });

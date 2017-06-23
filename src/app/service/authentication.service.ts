@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Http, Headers, Response } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
 
 @Injectable()
 export class AuthenticationService {
@@ -12,11 +13,18 @@ export class AuthenticationService {
             .map((response: Response) => {
                 // login successful if there's a jwt token in the response
                 let user = response.json();
-                if (user && user.token) {
+                //if unsername or password is not correct, a message is returned by the server
+                if (user.message) {
+                    switch (user.message) {
+                        case 'Wrong password' : throw new Error('Mot de passe incorrect');//return Observable.throw('Mot de passe incorrect'); //break;
+                        case 'Username not found' : throw new Error("Nom d'utilisateur incorrect");//return Observable.throw("Nom d'utilisateur incorrect"); //break;
+                    }
+                } else if (user && user.token) {
                     // store user details and jwt token in local storage to keep user logged in between page refreshes
                     localStorage.setItem('currentUser', JSON.stringify(user));
                 }
-            });
+            })
+            .catch((error:any) => Observable.throw(error.message  || error.json().error || 'Server error'));
     }
 
     logout() {
