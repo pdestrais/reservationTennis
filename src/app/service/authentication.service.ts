@@ -13,11 +13,11 @@ export class AuthenticationService {
             .map((response: Response) => {
                 // login successful if there's a jwt token in the response
                 let user = response.json();
-                //if unsername or password is not correct, a message is returned by the server
+                //if username or password is not correct, a message is returned by the server
                 if (user.message) {
                     switch (user.message) {
-                        case 'Wrong password' : throw new Error('Mot de passe incorrect');//return Observable.throw('Mot de passe incorrect'); //break;
-                        case 'Username not found' : throw new Error("Nom d'utilisateur incorrect");//return Observable.throw("Nom d'utilisateur incorrect"); //break;
+                        case 'Wrong password' : throw new Error('Mot de passe incorrect');
+                        case 'Username not found' : throw new Error("Nom d'utilisateur incorrect");
                     }
                 } else if (user && user.token) {
                     // store user details and jwt token in local storage to keep user logged in between page refreshes
